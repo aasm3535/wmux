@@ -8,19 +8,11 @@
 
         <!-- ── Logo / Header ── -->
         <Grid Grid.Row="0" Padding="16,16,12,12">
-            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <!-- Logo mark -->
-                <Border Width="24" Height="24" CornerRadius="6"
-                        Background="{ThemeResource SystemAccentColor}">
-                    <TextBlock Text="W" FontSize="13" FontWeight="Bold"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Foreground="White" />
-                </Border>
-                <TextBlock Text="wmux"
-                           FontSize="15" FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-            </StackPanel>
+            <TextBlock Text="wmux"
+                       FontSize="14" FontWeight="SemiBold"
+                       CharacterSpacing="50"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
             <Button Command="{x:Bind ViewModel.NewWorkspaceCommand}"
                     HorizontalAlignment="Right" VerticalAlignment="Center"
