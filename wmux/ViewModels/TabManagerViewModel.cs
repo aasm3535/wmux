@@ -23,6 +23,21 @@ public partial class TabManagerViewModel : ObservableObject
     // Active ConPTY sessions keyed by panel ID
     private readonly Dictionary<Guid, ConPtySession> _sessions = [];
 
+    // Output buffer: stores data received before TerminalView is ready
+    private readonly Dictionary<Guid, System.Text.StringBuilder> _outputBuffers = [];
+
+    /// <summary>Returns buffered output for a panel and clears the buffer.</summary>
+    public string DrainBuffer(Guid panelId)
+    {
+        if (_outputBuffers.TryGetValue(panelId, out var sb))
+        {
+            var s = sb.ToString();
+            sb.Clear();
+            return s;
+        }
+        return "";
+    }
+
     // History for back/forward navigation (up to 50 entries)
     private readonly List<Guid> _workspaceHistory = [];
     private int _historyIndex = -1;
@@ -154,6 +169,7 @@ public partial class TabManagerViewModel : ObservableObject
     {
         var session = new ConPtySession();
         _sessions[panel.Id] = session;
+        _outputBuffers[panel.Id] = new System.Text.StringBuilder();
 
         session.DataReceived += data => OnTerminalData(panel, data);
         session.ProcessExited += () => OnProcessExited(panel);
@@ -179,6 +195,10 @@ public partial class TabManagerViewModel : ObservableObject
 
     private void OnTerminalData(TerminalPanel panel, string data)
     {
+        // Always buffer so TerminalView can drain on connect
+        if (_outputBuffers.TryGetValue(panel.Id, out var buf))
+            buf.Append(data);
+
         // Parse OSC notification sequences
         foreach (var osc in OscParser.Parse(data))
         {

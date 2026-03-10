@@ -8,20 +8,19 @@
     <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- ── Header ── -->
-        <Grid Grid.Row="0" Padding="16,14,10,10" Height="48">
+        <Grid Grid.Row="0" Padding="16,12,10,8">
             <TextBlock Text="wmux"
-                       FontSize="11" FontWeight="SemiBold"
-                       CharacterSpacing="150"
-                       Foreground="#4A4A5A"
+                       FontSize="12" FontWeight="SemiBold"
+                       CharacterSpacing="100"
                        VerticalAlignment="Center"
-                       HorizontalAlignment="Left" />
+                       HorizontalAlignment="Left"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
             <Button Command="{x:Bind ViewModel.NewWorkspaceCommand}"
                     HorizontalAlignment="Right" VerticalAlignment="Center"
                     Style="{StaticResource IconButtonStyle}"
                     ToolTipService.ToolTip="New workspace  Ctrl+T">
-                <FontIcon Glyph="&#xE710;" FontSize="12"
-                          Foreground="#666" />
+                <FontIcon Glyph="&#xE710;" FontSize="12" />
             </Button>
         </Grid>
 
@@ -30,7 +29,7 @@
                       VerticalScrollBarVisibility="Hidden"
                       HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{x:Bind ViewModel.Workspaces, Mode=OneWay}"
-                          Padding="8,4,8,4">
+                          Padding="8,2,8,2">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:Workspace">
                         <Button Style="{StaticResource WorkspaceTabStyle}"
@@ -44,25 +43,24 @@
                                          Fill="{x:Bind ColorIndex, Converter={StaticResource ColorIndexToBrushConverter}}" />
 
                                 <!-- Name + meta -->
-                                <StackPanel Grid.Column="1" Spacing="1"
-                                            VerticalAlignment="Center">
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind Name, Mode=OneWay}"
-                                               FontSize="12"
-                                               Foreground="#C8C8D4"
+                                               FontSize="13"
                                                TextTrimming="CharacterEllipsis" />
-                                    <TextBlock FontSize="10"
-                                               Foreground="#555"
+                                    <TextBlock FontSize="11"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                                TextTrimming="CharacterEllipsis"
                                                Visibility="{x:Bind GitBranch, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
                                         <Run Text="{x:Bind GitBranch, Mode=OneWay}" />
                                     </TextBlock>
                                     <TextBlock Text="{x:Bind LatestNotificationText, Mode=OneWay}"
-                                               FontSize="10" Foreground="#5B5BDF"
+                                               FontSize="11"
+                                               Foreground="{ThemeResource SystemAccentColorLight1}"
                                                TextTrimming="CharacterEllipsis"
                                                Visibility="{x:Bind LatestNotificationText, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" />
                                 </StackPanel>
 
-                                <!-- Badge -->
+                                <!-- Unread badge -->
                                 <InfoBadge Grid.Column="2"
                                            Value="{x:Bind TotalUnreadCount, Mode=OneWay}"
                                            VerticalAlignment="Center"
@@ -75,18 +73,17 @@
         </ScrollViewer>
 
         <!-- ── Bottom toolbar ── -->
-        <Grid Grid.Row="2" Padding="8,6,8,12">
-            <StackPanel Orientation="Horizontal" Spacing="2"
-                        HorizontalAlignment="Left">
+        <Grid Grid.Row="2" Padding="8,4,8,12">
+            <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Left">
                 <Button Command="{x:Bind ViewModel.SplitVerticalCommand}"
                         Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="Split vertical">
-                    <FontIcon Glyph="&#xE94E;" FontSize="13" Foreground="#555" />
+                    <FontIcon Glyph="&#xE94E;" FontSize="13" />
                 </Button>
                 <Button Command="{x:Bind ViewModel.SplitHorizontalCommand}"
                         Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="Split horizontal">
-                    <FontIcon Glyph="&#xE94F;" FontSize="13" Foreground="#555" />
+                    <FontIcon Glyph="&#xE94F;" FontSize="13" />
                 </Button>
             </StackPanel>
 
@@ -94,7 +91,7 @@
                     HorizontalAlignment="Right"
                     Click="OnNotificationsBellClick"
                     ToolTipService.ToolTip="Notifications">
-                <FontIcon Glyph="&#xEA8F;" FontSize="13" Foreground="#555" />
+                <FontIcon Glyph="&#xEA8F;" FontSize="13" />
             </Button>
         </Grid>
     </Grid>

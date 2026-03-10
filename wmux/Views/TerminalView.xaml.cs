@@ -107,6 +107,11 @@ public sealed partial class TerminalView : UserControl
                 DispatcherQueue.TryEnqueue(UpdateNotificationRing);
         };
 
+        // Flush anything the shell wrote before we were ready
+        var buffered = ViewModel.DrainBuffer(Panel.Id);
+        if (!string.IsNullOrEmpty(buffered))
+            SendOutput(buffered);
+
         // Focus the terminal
         PostMsg("{\"type\":\"focus\"}");
     }

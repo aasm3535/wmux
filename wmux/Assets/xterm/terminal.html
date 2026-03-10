@@ -5,7 +5,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 100%; height: 100%; background: #0c0c0f; overflow: hidden; }
-  #terminal { width: 100%; height: 100%; }
+  #terminal { width: calc(100% - 24px); height: calc(100% - 16px);
+              margin: 8px 12px; }
 
   /* Dark scrollbar for xterm scrollback */
   .xterm-viewport::-webkit-scrollbar { width: 5px; }
