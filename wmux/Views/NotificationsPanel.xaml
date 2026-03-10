@@ -4,48 +4,104 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:models="using:wmux.Models">
 
-    <Border Background="#0D0D0D" BorderBrush="#1E1E1E" BorderThickness="1,0,0,0">
-        <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Dim overlay — click outside to close -->
+    <Grid>
+        <Rectangle Fill="#80000000" PointerPressed="OnOverlayClick" />
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Padding="16,14,12,10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Notifications" FontSize="13" FontWeight="SemiBold" />
-                <Button Grid.Column="1" Click="OnClose" Style="{StaticResource IconButtonStyle}">
-                    <FontIcon Glyph="&#xE711;" FontSize="12" />
-                </Button>
+        <!-- Modal card -->
+        <Border Width="420"
+                MaxHeight="560"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                CornerRadius="12"
+                Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Shadow="{StaticResource SharedShadow28}">
+
+            <Grid RowDefinitions="Auto,*,Auto" Margin="0,0,0,4">
+
+                <!-- Header -->
+                <Grid Grid.Row="0" Padding="20,16,12,12">
+                    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xEA8F;" FontSize="16"
+                                  Foreground="{ThemeResource SystemAccentColor}" />
+                        <TextBlock Text="Notifications"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Style="{StaticResource IconButtonStyle}"
+                            Click="OnClose">
+                        <FontIcon Glyph="&#xE711;" FontSize="11" />
+                    </Button>
+                </Grid>
+
+                <!-- Divider -->
+                <Border Grid.Row="0" VerticalAlignment="Bottom" Height="1"
+                        Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <!-- List -->
+                <ScrollViewer Grid.Row="1" Padding="12,8,12,0"
+                              VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="4" x:Name="NotifList">
+                        <ItemsControl ItemsSource="{x:Bind GetAllNotifications(), Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:TerminalNotification">
+                                    <Border Padding="14,10" Margin="0,0,0,4"
+                                            CornerRadius="8"
+                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                            BorderThickness="1">
+                                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                                            <TextBlock Grid.Row="0" Grid.Column="0"
+                                                       Text="{x:Bind Title}"
+                                                       FontSize="13" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1"
+                                                       Text="{x:Bind CreatedAt, Converter={StaticResource TimeAgoConverter}}"
+                                                       FontSize="11"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Text="{x:Bind Body}"
+                                                       FontSize="12"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,4,0,0" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Empty state -->
+                        <StackPanel Spacing="8" Padding="0,32,0,32"
+                                    HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xEA8F;" FontSize="28"
+                                      Foreground="{ThemeResource TextFillColorDisabledBrush}"
+                                      HorizontalAlignment="Center" />
+                            <TextBlock Text="No notifications"
+                                       FontSize="13"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Footer -->
+                <Grid Grid.Row="2" Padding="12,8,12,12">
+                    <Border VerticalAlignment="Top" Height="1"
+                            Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                            Margin="-12,0,-12,0" />
+                    <Button Content="Clear all"
+                            HorizontalAlignment="Right"
+                            Margin="0,8,0,0"
+                            Click="OnClearAll"
+                            Style="{StaticResource DefaultButtonStyle}" />
+                </Grid>
             </Grid>
-
-            <!-- Notification list -->
-            <ScrollViewer Grid.Row="1">
-                <ItemsControl ItemsSource="{x:Bind GetAllNotifications(), Mode=OneWay}" Padding="8,0">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:TerminalNotification">
-                            <Border Padding="12,10" Margin="0,2" CornerRadius="8"
-                                    Background="#141414">
-                                <StackPanel Spacing="4">
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBlock Text="{x:Bind Title}" FontSize="12"
-                                                   FontWeight="Medium" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{x:Bind CreatedAt, Converter={StaticResource TimeAgoConverter}}"
-                                                   FontSize="10" Foreground="#555" />
-                                    </Grid>
-                                    <TextBlock Text="{x:Bind Body}" FontSize="11"
-                                               Foreground="#888" TextWrapping="Wrap" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-
-            <!-- Clear all -->
-            <Button Grid.Row="2" HorizontalAlignment="Stretch" Margin="8,8"
-                    Click="OnClearAll" Content="Clear all" />
-        </Grid>
-    </Border>
+        </Border>
+    </Grid>
 </UserControl>

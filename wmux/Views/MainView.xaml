@@ -5,13 +5,12 @@
     xmlns:views="using:wmux.Views"
     xmlns:vm="using:wmux.ViewModels">
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
-            <!-- Sidebar -->
-            <ColumnDefinition Width="200" MinWidth="160" MaxWidth="280" />
-            <!-- Separator -->
-            <ColumnDefinition Width="1" />
-            <!-- Terminal area -->
+            <ColumnDefinition x:Name="SidebarColumn" Width="220" MinWidth="160" MaxWidth="360" />
+            <!-- Drag handle — 5px invisible hit area -->
+            <ColumnDefinition Width="5" />
+            <!-- Terminal -->
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -19,25 +18,32 @@
         <views:SidebarView
             Grid.Column="0"
             ViewModel="{x:Bind ViewModel}"
-            Background="{StaticResource SidebarBackgroundBrush}" />
+            Background="{ThemeResource NavigationViewDefaultPaneBackground}" />
 
-        <!-- Separator — 1px dark line -->
+        <!-- Resize handle — drag to resize sidebar -->
         <Border Grid.Column="1"
-                Width="1"
-                Background="{StaticResource SidebarBorderBrush}" />
+                x:Name="ResizeHandle"
+                Background="Transparent"
+                PointerEntered="OnResizeEnter"
+                PointerExited="OnResizeExit"
+                PointerPressed="OnResizePressed"
+                PointerMoved="OnResizeMoved"
+                PointerReleased="OnResizeReleased">
+            <!-- Visible 1px line in center -->
+            <Border Width="1"
+                    HorizontalAlignment="Center"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        </Border>
 
-        <!-- Main terminal / browser area -->
+        <!-- Terminal area -->
         <views:WorkspaceContentView
             Grid.Column="2"
             ViewModel="{x:Bind ViewModel}"
-            Background="{StaticResource TerminalBackgroundBrush}" />
+            Background="#0C0C0C" />
 
-        <!-- Notification slide-in panel (overlays from right) -->
+        <!-- Notifications modal overlay -->
         <views:NotificationsPanel
-            Grid.Column="2"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Stretch"
-            Width="320"
+            Grid.Column="0" Grid.ColumnSpan="3"
             ViewModel="{x:Bind ViewModel}"
             Visibility="{x:Bind ViewModel.IsNotificationPanelOpen, Mode=OneWay}" />
     </Grid>

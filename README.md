@@ -35,7 +35,7 @@ Built for developers running multiple AI coding agents simultaneously.
 ## Build
 
 ```
-git clone https://github.com/YOUR_USERNAME/wmux
+git clone https://github.com/aasm3535/wmux
 cd wmux
 # Open wmux.sln in Visual Studio 2022
 # Set wmux as startup project, build and run

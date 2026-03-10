@@ -31,6 +31,11 @@ public sealed partial class NotificationsPanel : UserControl
             .OrderByDescending(n => n.CreatedAt);
     }
 
+    private void OnOverlayClick(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (ViewModel is not null) ViewModel.IsNotificationPanelOpen = false;
+    }
+
     private void OnClose(object sender, RoutedEventArgs e)
     {
         if (ViewModel is not null) ViewModel.IsNotificationPanelOpen = false;

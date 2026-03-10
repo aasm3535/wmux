@@ -4,20 +4,14 @@
 <meta charset="utf-8" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; background: #0c0c0f; overflow: hidden; }
-  #terminal { width: calc(100% - 24px); height: calc(100% - 16px);
-              margin: 8px 12px; }
+  html, body { width: 100%; height: 100%; background: #0C0C0C; overflow: hidden; }
+  #terminal { width: calc(100% - 20px); height: calc(100% - 12px); margin: 6px 10px; }
 
-  /* Dark scrollbar for xterm scrollback */
+  /* Campbell-style scrollbar */
   .xterm-viewport::-webkit-scrollbar { width: 5px; }
   .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
-  .xterm-viewport::-webkit-scrollbar-thumb {
-    background: #2a2a3a;
-    border-radius: 3px;
-  }
-  .xterm-viewport::-webkit-scrollbar-thumb:hover {
-    background: #3a3a50;
-  }
+  .xterm-viewport::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+  .xterm-viewport::-webkit-scrollbar-thumb:hover { background: #555; }
 </style>
 <link rel="stylesheet" href="xterm.css" />
 <script src="xterm.js"></script>
@@ -27,85 +21,76 @@
 <body>
 <div id="terminal"></div>
 <script>
+// Campbell — Windows Terminal default color scheme
 const term = new Terminal({
-  fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace',
-  fontSize: 13,
-  lineHeight: 1.25,
+  fontFamily: '"Cascadia Mono", "Cascadia Code", Consolas, "Courier New", monospace',
+  fontSize: 12,
+  lineHeight: 1.2,
   letterSpacing: 0,
   cursorBlink: true,
-  cursorStyle: 'bar',
-  cursorWidth: 2,
-  scrollback: 5000,
+  cursorStyle: 'block',
+  scrollback: 10000,
   theme: {
-    background:   '#0c0c0f',
-    foreground:   '#d4d4d8',
-    cursor:       '#6366f1',
-    cursorAccent: '#0c0c0f',
-    selectionBackground: '#6366f133',
-    black:        '#18181b',
-    brightBlack:  '#3f3f46',
-    red:          '#f87171',
-    brightRed:    '#fca5a5',
-    green:        '#4ade80',
-    brightGreen:  '#86efac',
-    yellow:       '#fbbf24',
-    brightYellow: '#fde68a',
-    blue:         '#60a5fa',
-    brightBlue:   '#93c5fd',
-    magenta:      '#c084fc',
-    brightMagenta:'#d8b4fe',
-    cyan:         '#22d3ee',
-    brightCyan:   '#67e8f9',
-    white:        '#d4d4d8',
-    brightWhite:  '#f4f4f5',
+    background:      '#0C0C0C',
+    foreground:      '#CCCCCC',
+    cursor:          '#CCCCCC',
+    cursorAccent:    '#0C0C0C',
+    selectionBackground: '#CCCCCC33',
+    black:           '#0C0C0C',
+    brightBlack:     '#767676',
+    red:             '#C50F1F',
+    brightRed:       '#E74856',
+    green:           '#13A10E',
+    brightGreen:     '#16C60C',
+    yellow:          '#C19C00',
+    brightYellow:    '#F9F1A5',
+    blue:            '#0037DA',
+    brightBlue:      '#3B78FF',
+    magenta:         '#881798',
+    brightMagenta:   '#B4009E',
+    cyan:            '#3A96DD',
+    brightCyan:      '#61D6D6',
+    white:           '#CCCCCC',
+    brightWhite:     '#F2F2F2',
   },
   allowProposedApi: true,
 });
 
 const fitAddon   = new FitAddon.FitAddon();
 const linksAddon = new WebLinksAddon.WebLinksAddon();
-
 term.loadAddon(fitAddon);
 term.loadAddon(linksAddon);
-
-// WebGL addon can be added later for GPU acceleration
 
 term.open(document.getElementById('terminal'));
 fitAddon.fit();
 
-// ── I/O bridge with C# / ConPTY ──────────────────────────────────────────
+// ── Bridge with C# ───────────────────────────────────────────────────────
 term.onData(data => {
   window.chrome.webview.postMessage(JSON.stringify({ type: 'input', data }));
 });
-
 term.onResize(({ cols, rows }) => {
   window.chrome.webview.postMessage(JSON.stringify({ type: 'resize', cols, rows }));
 });
 
 window.chrome.webview.addEventListener('message', e => {
   let msg;
-  try { msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }
-  catch { return; }
-
+  try { msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
   switch (msg.type) {
-    case 'output':    term.write(msg.data); break;
-    case 'setTheme':  term.options.theme = msg.theme; break;
+    case 'output':   term.write(msg.data); break;
+    case 'setTheme': term.options.theme = msg.theme; break;
     case 'setFont':
       term.options.fontFamily = msg.fontFamily;
       term.options.fontSize   = msg.fontSize;
       fitAddon.fit();
       break;
-    case 'clear':     term.clear(); break;
-    case 'focus':     term.focus(); break;
+    case 'clear': term.clear(); break;
+    case 'focus': term.focus(); break;
   }
 });
 
-// Auto-resize
-new ResizeObserver(() => {
-  try { fitAddon.fit(); } catch (_) {}
-}).observe(document.getElementById('terminal'));
+new ResizeObserver(() => { try { fitAddon.fit(); } catch {} })
+  .observe(document.getElementById('terminal'));
 
-// Signal ready to C#
 window.chrome.webview.postMessage(JSON.stringify({ type: 'ready' }));
 term.focus();
 </script>
