@@ -8,7 +8,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <!-- Sidebar -->
-            <ColumnDefinition Width="220" MinWidth="180" MaxWidth="320" />
+            <ColumnDefinition Width="200" MinWidth="160" MaxWidth="280" />
             <!-- Separator -->
             <ColumnDefinition Width="1" />
             <!-- Terminal area -->
@@ -21,8 +21,10 @@
             ViewModel="{x:Bind ViewModel}"
             Background="{StaticResource SidebarBackgroundBrush}" />
 
-        <!-- Separator -->
-        <Rectangle Grid.Column="1" Fill="{StaticResource SidebarBorderBrush}" />
+        <!-- Separator — 1px dark line -->
+        <Border Grid.Column="1"
+                Width="1"
+                Background="{StaticResource SidebarBorderBrush}" />
 
         <!-- Main terminal / browser area -->
         <views:WorkspaceContentView

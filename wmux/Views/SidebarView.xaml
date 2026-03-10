@@ -7,59 +7,65 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- Top: app title + new workspace button -->
-        <Grid Grid.Row="0" Padding="12,16,8,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <!-- ── Header ── -->
+        <Grid Grid.Row="0" Padding="16,14,10,10" Height="48">
+            <TextBlock Text="wmux"
+                       FontSize="11" FontWeight="SemiBold"
+                       CharacterSpacing="150"
+                       Foreground="#4A4A5A"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Left" />
 
-            <TextBlock Text="wmux" FontSize="13" FontWeight="SemiBold"
-                       Foreground="#888" VerticalAlignment="Center" />
-
-            <Button Grid.Column="1" Command="{x:Bind ViewModel.NewWorkspaceCommand}"
+            <Button Command="{x:Bind ViewModel.NewWorkspaceCommand}"
+                    HorizontalAlignment="Right" VerticalAlignment="Center"
                     Style="{StaticResource IconButtonStyle}"
-                    ToolTipService.ToolTip="New workspace (Ctrl+T)">
-                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                    ToolTipService.ToolTip="New workspace  Ctrl+T">
+                <FontIcon Glyph="&#xE710;" FontSize="12"
+                          Foreground="#666" />
             </Button>
         </Grid>
 
-        <!-- Workspace list -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
-            <ItemsControl ItemsSource="{x:Bind ViewModel.Workspaces, Mode=OneWay}" Padding="4,0">
+        <!-- ── Workspace list ── -->
+        <ScrollViewer Grid.Row="1"
+                      VerticalScrollBarVisibility="Hidden"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{x:Bind ViewModel.Workspaces, Mode=OneWay}"
+                          Padding="8,4,8,4">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:Workspace">
                         <Button Style="{StaticResource WorkspaceTabStyle}"
                                 Click="OnWorkspaceClick" Tag="{x:Bind}">
-                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                            <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
 
                                 <!-- Color dot -->
-                                <Ellipse Grid.Column="0" Width="8" Height="8"
+                                <Ellipse Grid.Column="0"
+                                         Width="7" Height="7"
                                          VerticalAlignment="Center"
                                          Fill="{x:Bind ColorIndex, Converter={StaticResource ColorIndexToBrushConverter}}" />
 
-                                <!-- Info -->
-                                <StackPanel Grid.Column="1" Spacing="2">
+                                <!-- Name + meta -->
+                                <StackPanel Grid.Column="1" Spacing="1"
+                                            VerticalAlignment="Center">
                                     <TextBlock Text="{x:Bind Name, Mode=OneWay}"
-                                               FontSize="12" FontWeight="Medium"
+                                               FontSize="12"
+                                               Foreground="#C8C8D4"
                                                TextTrimming="CharacterEllipsis" />
-                                    <!-- Git branch -->
-                                    <TextBlock FontSize="10" Foreground="#666"
+                                    <TextBlock FontSize="10"
+                                               Foreground="#555"
                                                TextTrimming="CharacterEllipsis"
                                                Visibility="{x:Bind GitBranch, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
-                                        <Run Text="&#xE7B2; " FontFamily="Segoe MDL2 Assets" FontSize="9" />
                                         <Run Text="{x:Bind GitBranch, Mode=OneWay}" />
                                     </TextBlock>
-                                    <!-- Latest notification -->
                                     <TextBlock Text="{x:Bind LatestNotificationText, Mode=OneWay}"
-                                               FontSize="10" Foreground="#6366F1"
+                                               FontSize="10" Foreground="#5B5BDF"
                                                TextTrimming="CharacterEllipsis"
                                                Visibility="{x:Bind LatestNotificationText, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" />
                                 </StackPanel>
 
-                                <!-- Notification badge -->
+                                <!-- Badge -->
                                 <InfoBadge Grid.Column="2"
                                            Value="{x:Bind TotalUnreadCount, Mode=OneWay}"
+                                           VerticalAlignment="Center"
                                            Visibility="{x:Bind HasUnreadNotifications, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                             </Grid>
                         </Button>
@@ -68,33 +74,27 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Bottom toolbar -->
-        <Grid Grid.Row="2" Padding="8,8,8,12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Split buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                <Button Command="{x:Bind ViewModel.SplitHorizontalCommand}"
-                        Style="{StaticResource IconButtonStyle}"
-                        ToolTipService.ToolTip="Split horizontal">
-                    <FontIcon Glyph="&#xE94F;" FontSize="14" />
-                </Button>
+        <!-- ── Bottom toolbar ── -->
+        <Grid Grid.Row="2" Padding="8,6,8,12">
+            <StackPanel Orientation="Horizontal" Spacing="2"
+                        HorizontalAlignment="Left">
                 <Button Command="{x:Bind ViewModel.SplitVerticalCommand}"
                         Style="{StaticResource IconButtonStyle}"
                         ToolTipService.ToolTip="Split vertical">
-                    <FontIcon Glyph="&#xE94E;" FontSize="14" />
+                    <FontIcon Glyph="&#xE94E;" FontSize="13" Foreground="#555" />
+                </Button>
+                <Button Command="{x:Bind ViewModel.SplitHorizontalCommand}"
+                        Style="{StaticResource IconButtonStyle}"
+                        ToolTipService.ToolTip="Split horizontal">
+                    <FontIcon Glyph="&#xE94F;" FontSize="13" Foreground="#555" />
                 </Button>
             </StackPanel>
 
-            <!-- Notifications bell -->
-            <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}"
+            <Button Style="{StaticResource IconButtonStyle}"
+                    HorizontalAlignment="Right"
                     Click="OnNotificationsBellClick"
                     ToolTipService.ToolTip="Notifications">
-                <FontIcon Glyph="&#xEA8F;" FontSize="14" />
+                <FontIcon Glyph="&#xEA8F;" FontSize="13" Foreground="#555" />
             </Button>
         </Grid>
     </Grid>

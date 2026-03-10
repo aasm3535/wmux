@@ -32,6 +32,7 @@ public sealed partial class TerminalView : UserControl
 
     private bool _webViewReady;
     private readonly Queue<string> _pendingOutput = new();
+    private ConPtySession? _session;
 
     public TerminalView()
     {
@@ -41,85 +42,130 @@ public sealed partial class TerminalView : UserControl
 
     private async void InitializeWebView()
     {
-        await TerminalWebView.EnsureCoreWebView2Async();
-        TerminalWebView.CoreWebView2.Settings.IsScriptEnabled = true;
-        TerminalWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-        TerminalWebView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
+        try
+        {
+            await TerminalWebView.EnsureCoreWebView2Async();
 
-        // Load the xterm.js page
-        var htmlPath = Path.Combine(AppContext.BaseDirectory, "Assets", "xterm", "terminal.html");
-        TerminalWebView.CoreWebView2.Navigate(new Uri(htmlPath).AbsoluteUri);
-        TerminalWebView.CoreWebView2.NavigationCompleted += OnNavigationCompleted;
+            var wv = TerminalWebView.CoreWebView2;
+            wv.Settings.IsScriptEnabled = true;
+            wv.Settings.AreDevToolsEnabled = false;
+            wv.Settings.IsWebMessageEnabled = true;
+            wv.Settings.IsStatusBarEnabled = false;
+            wv.Settings.AreDefaultContextMenusEnabled = false;
+
+            // Virtual host so CDN scripts load correctly from local file
+            var baseDir = System.IO.Path.GetFullPath(
+                System.IO.Path.Combine(AppContext.BaseDirectory));
+            wv.SetVirtualHostNameToFolderMapping(
+                "wmux.local", baseDir,
+                CoreWebView2HostResourceAccessKind.Allow);
+
+            wv.WebMessageReceived += OnWebMessageReceived;
+            wv.NavigationCompleted += OnNavigationCompleted;
+            wv.Navigate("https://wmux.local/Assets/xterm/terminal.html");
+        }
+        catch (Exception ex)
+        {
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "wmux_webview.txt"),
+                ex.ToString());
+        }
     }
 
-    private void OnNavigationCompleted(CoreWebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
+    private void OnNavigationCompleted(CoreWebView2 sender,
+        CoreWebView2NavigationCompletedEventArgs args)
     {
+        if (!args.IsSuccess) return;
         _webViewReady = true;
-        // Flush any output that arrived before WebView was ready
         while (_pendingOutput.TryDequeue(out var data))
-            SendOutputToWebView(data);
-
-        // Wire ConPTY session output to xterm.js
+            SendOutput(data);
         WireSession();
     }
 
-    private static void OnPanelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnPanelChanged(DependencyObject d,
+        DependencyPropertyChangedEventArgs e)
     {
         if (d is TerminalView tv) tv.WireSession();
     }
 
-    private ConPtySession? _session;
-
     private void WireSession()
     {
         if (Panel is null || ViewModel is null || !_webViewReady) return;
+
+        // Detach old session
+        if (_session is not null)
+            _session.DataReceived -= OnTerminalData;
 
         _session = ViewModel.GetSession(Panel.Id);
         if (_session is null) return;
 
         _session.DataReceived += OnTerminalData;
 
-        // Update notification ring
         Panel.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(TerminalPanel.UnreadCount))
                 DispatcherQueue.TryEnqueue(UpdateNotificationRing);
         };
+
+        // Focus the terminal
+        PostMsg("{\"type\":\"focus\"}");
     }
 
     private void OnTerminalData(string data)
     {
         if (_webViewReady)
-            DispatcherQueue.TryEnqueue(() => SendOutputToWebView(data));
+            DispatcherQueue.TryEnqueue(() => SendOutput(data));
         else
             _pendingOutput.Enqueue(data);
     }
 
-    private void SendOutputToWebView(string data)
+    private void SendOutput(string data)
     {
         var msg = JsonSerializer.Serialize(new { type = "output", data });
-        TerminalWebView.CoreWebView2.PostWebMessageAsJson(msg);
+        try { TerminalWebView.CoreWebView2.PostWebMessageAsString(msg); }
+        catch { }
     }
 
-    private void OnWebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
+    private void PostMsg(string json)
+    {
+        try { TerminalWebView.CoreWebView2.PostWebMessageAsString(json); }
+        catch { }
+    }
+
+    private void OnWebMessageReceived(CoreWebView2 sender,
+        CoreWebView2WebMessageReceivedEventArgs args)
     {
         try
         {
             using var doc = JsonDocument.Parse(args.WebMessageAsJson);
             var root = doc.RootElement;
-            var type = root.GetProperty("type").GetString();
+
+            // The JS sends a JSON string (PostWebMessageAsString wraps it in quotes)
+            // So we may need to parse the inner string
+            string json;
+            if (root.ValueKind == JsonValueKind.String)
+                json = root.GetString()!;
+            else
+                json = args.WebMessageAsJson;
+
+            using var inner = JsonDocument.Parse(json);
+            var r = inner.RootElement;
+            var type = r.GetProperty("type").GetString();
 
             switch (type)
             {
                 case "input":
-                    var input = root.GetProperty("data").GetString() ?? "";
-                    _session?.Write(input);
+                    _session?.Write(r.GetProperty("data").GetString() ?? "");
                     break;
-
                 case "resize":
-                    var cols = root.GetProperty("cols").GetInt32();
-                    var rows = root.GetProperty("rows").GetInt32();
-                    _session?.Resize(cols, rows);
+                    _session?.Resize(
+                        r.GetProperty("cols").GetInt32(),
+                        r.GetProperty("rows").GetInt32());
+                    break;
+                case "ready":
+                    // xterm.js is ready — flush any queued output
+                    while (_pendingOutput.TryDequeue(out var d))
+                        SendOutput(d);
                     break;
             }
         }

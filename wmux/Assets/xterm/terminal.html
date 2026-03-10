@@ -4,10 +4,20 @@
 <meta charset="utf-8" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; background: #0f0f0f; overflow: hidden; }
+  html, body { width: 100%; height: 100%; background: #0c0c0f; overflow: hidden; }
   #terminal { width: 100%; height: 100%; }
+
+  /* Dark scrollbar for xterm scrollback */
+  .xterm-viewport::-webkit-scrollbar { width: 5px; }
+  .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
+  .xterm-viewport::-webkit-scrollbar-thumb {
+    background: #2a2a3a;
+    border-radius: 3px;
+  }
+  .xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: #3a3a50;
+  }
 </style>
-<!-- xterm.js loaded from CDN — swap for local files in production -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
@@ -18,78 +28,89 @@
 <div id="terminal"></div>
 <script>
 const term = new Terminal({
-  fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+  fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace',
   fontSize: 13,
-  lineHeight: 1.2,
+  lineHeight: 1.25,
+  letterSpacing: 0,
   cursorBlink: true,
   cursorStyle: 'bar',
+  cursorWidth: 2,
+  scrollback: 5000,
   theme: {
-    background:  '#0f0f0f',
-    foreground:  '#e8e8e8',
-    cursor:      '#e8e8e8',
-    black:       '#1a1a1a',
-    brightBlack: '#4a4a4a',
-    red:         '#f87171',
-    brightRed:   '#fca5a5',
-    green:       '#4ade80',
-    brightGreen: '#86efac',
-    yellow:      '#facc15',
-    brightYellow:'#fde047',
-    blue:        '#60a5fa',
-    brightBlue:  '#93c5fd',
-    magenta:     '#c084fc',
+    background:   '#0c0c0f',
+    foreground:   '#d4d4d8',
+    cursor:       '#6366f1',
+    cursorAccent: '#0c0c0f',
+    selectionBackground: '#6366f133',
+    black:        '#18181b',
+    brightBlack:  '#3f3f46',
+    red:          '#f87171',
+    brightRed:    '#fca5a5',
+    green:        '#4ade80',
+    brightGreen:  '#86efac',
+    yellow:       '#fbbf24',
+    brightYellow: '#fde68a',
+    blue:         '#60a5fa',
+    brightBlue:   '#93c5fd',
+    magenta:      '#c084fc',
     brightMagenta:'#d8b4fe',
-    cyan:        '#22d3ee',
-    brightCyan:  '#67e8f9',
-    white:       '#e8e8e8',
-    brightWhite: '#ffffff',
+    cyan:         '#22d3ee',
+    brightCyan:   '#67e8f9',
+    white:        '#d4d4d8',
+    brightWhite:  '#f4f4f5',
   },
   allowProposedApi: true,
 });
 
-const fitAddon = new FitAddon.FitAddon();
-const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+const fitAddon   = new FitAddon.FitAddon();
+const linksAddon = new WebLinksAddon.WebLinksAddon();
 
 term.loadAddon(fitAddon);
-term.loadAddon(webLinksAddon);
+term.loadAddon(linksAddon);
 
 try {
-  const webglAddon = new WebglAddon.WebglAddon();
-  webglAddon.onContextLoss(() => webglAddon.dispose());
-  term.loadAddon(webglAddon);
-} catch (e) { /* WebGL not available, fallback to canvas */ }
+  const webgl = new WebglAddon.WebglAddon();
+  webgl.onContextLoss(() => webgl.dispose());
+  term.loadAddon(webgl);
+} catch (_) {}
 
 term.open(document.getElementById('terminal'));
 fitAddon.fit();
 
-// Send input to host (C# / ConPTY)
+// ── I/O bridge with C# / ConPTY ──────────────────────────────────────────
 term.onData(data => {
-  window.chrome.webview.postMessage({ type: 'input', data: data });
+  window.chrome.webview.postMessage(JSON.stringify({ type: 'input', data }));
 });
 
 term.onResize(({ cols, rows }) => {
-  window.chrome.webview.postMessage({ type: 'resize', cols, rows });
+  window.chrome.webview.postMessage(JSON.stringify({ type: 'resize', cols, rows }));
 });
 
-// Receive output from host
-window.chrome.webview.addEventListener('message', event => {
-  const msg = event.data;
-  if (msg.type === 'output') {
-    term.write(msg.data);
-  } else if (msg.type === 'setTheme') {
-    term.options.theme = msg.theme;
-  } else if (msg.type === 'setFont') {
-    term.options.fontFamily = msg.fontFamily;
-    term.options.fontSize   = msg.fontSize;
-    fitAddon.fit();
-  } else if (msg.type === 'clear') {
-    term.clear();
+window.chrome.webview.addEventListener('message', e => {
+  let msg;
+  try { msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; }
+  catch { return; }
+
+  switch (msg.type) {
+    case 'output':    term.write(msg.data); break;
+    case 'setTheme':  term.options.theme = msg.theme; break;
+    case 'setFont':
+      term.options.fontFamily = msg.fontFamily;
+      term.options.fontSize   = msg.fontSize;
+      fitAddon.fit();
+      break;
+    case 'clear':     term.clear(); break;
+    case 'focus':     term.focus(); break;
   }
 });
 
-// Resize observer
-new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+// Auto-resize
+new ResizeObserver(() => {
+  try { fitAddon.fit(); } catch (_) {}
+}).observe(document.getElementById('terminal'));
 
+// Signal ready to C#
+window.chrome.webview.postMessage(JSON.stringify({ type: 'ready' }));
 term.focus();
 </script>
 </body>
