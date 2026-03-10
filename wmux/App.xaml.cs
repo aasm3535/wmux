@@ -12,13 +12,32 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+
+        // Catch any unhandled exception and log it before crashing
+        UnhandledException += (_, e) =>
+        {
+            var msg = e.Exception?.ToString() ?? "unknown";
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "wmux_crash.txt"),
+                msg);
+            e.Handled = false;
+        };
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        MainWindow = new MainWindow();
-        MainWindow.Activate();
-
-        PipeServer.Start();
+        try
+        {
+            MainWindow = new MainWindow();
+            MainWindow.Activate();
+            PipeServer.Start();
+        }
+        catch (Exception ex)
+        {
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "wmux_launch_crash.txt"),
+                ex.ToString());
+            throw;
+        }
     }
 }

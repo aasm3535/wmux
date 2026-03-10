@@ -133,7 +133,8 @@ public sealed class ConPtySession : IDisposable
         int hr = CreatePseudoConsole(size, _pipeInShell!, _pipeOutShell!, 0, out _hPseudoConsole);
         if (hr < 0) throw new InvalidOperationException($"CreatePseudoConsole failed: {hr:X}");
 
-        _readStream = new FileStream(_pipeIn!, System.IO.FileAccess.Read, 4096, isAsync: true);
+        // ConPTY pipes don't support overlapped (async) I/O — use synchronous streams
+        _readStream  = new FileStream(_pipeIn!,  System.IO.FileAccess.Read,  4096, isAsync: false);
         _writeStream = new FileStream(_pipeOut!, System.IO.FileAccess.Write, 4096, isAsync: false);
     }
 
@@ -172,23 +173,29 @@ public sealed class ConPtySession : IDisposable
     private void BeginRead()
     {
         var token = _cts.Token;
-        Task.Run(async () =>
+        // Run synchronous blocking read on a dedicated thread (ConPTY pipes don't support overlapped I/O)
+        Thread thread = new(() =>
         {
             var buffer = new byte[4096];
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    int read = await _readStream!.ReadAsync(buffer, 0, buffer.Length, token);
+                    int read = _readStream!.Read(buffer, 0, buffer.Length);
                     if (read == 0) break;
                     var text = System.Text.Encoding.UTF8.GetString(buffer, 0, read);
                     DataReceived?.Invoke(text);
                 }
             }
-            catch (OperationCanceledException) { }
+            catch (ObjectDisposedException) { }
             catch { }
             finally { ProcessExited?.Invoke(); }
-        }, token);
+        })
+        {
+            IsBackground = true,
+            Name = "ConPTY-Reader"
+        };
+        thread.Start();
     }
 
     public void Dispose()

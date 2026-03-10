@@ -10,5 +10,6 @@ public sealed partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
+        Loaded += (_, _) => ViewModel.Initialize();
     }
 }

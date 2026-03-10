@@ -38,7 +38,23 @@ public partial class TabManagerViewModel : ObservableObject
     public TabManagerViewModel()
     {
         App.PipeServer.CommandReceived += OnPipeCommand;
-        RestoreSession();
+        // Sessions are started lazily via Initialize() to avoid crashing during XAML construction
+    }
+
+    /// <summary>Call after the window is loaded to start terminal sessions.</summary>
+    public void Initialize()
+    {
+        try { RestoreSession(); }
+        catch (Exception ex)
+        {
+            System.IO.File.WriteAllText(
+                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "wmux_vm_crash.txt"),
+                ex.ToString());
+            // Fallback: at least create one empty workspace without a session
+            var ws = new Workspace { Name = "Terminal 1" };
+            Workspaces.Add(ws);
+            SelectedWorkspace = ws;
+        }
     }
 
     // ── Workspace management ──────────────────────────────────────────────────

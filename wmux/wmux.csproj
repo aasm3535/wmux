@@ -9,6 +9,8 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsPackageType>None</WindowsPackageType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -28,4 +30,12 @@
   <ItemGroup>
     <Content Include="Assets\xterm\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <Target Name="CopyBootstrapDll" AfterTargets="Build">
+    <Copy
+      SourceFiles="$(OutputPath)runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll"
+      DestinationFolder="$(OutputPath)"
+      SkipUnchangedFiles="true"
+      Condition="Exists('$(OutputPath)runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll')" />
+  </Target>
 </Project>
