@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; background: #0f0f0f; overflow: hidden; }
+  #terminal { width: 100%; height: 100%; }
+</style>
+<!-- xterm.js loaded from CDN — swap for local files in production -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xterm-addon-webgl@0.16.0/lib/xterm-addon-webgl.js"></script>
+</head>
+<body>
+<div id="terminal"></div>
+<script>
+const term = new Terminal({
+  fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
+  fontSize: 13,
+  lineHeight: 1.2,
+  cursorBlink: true,
+  cursorStyle: 'bar',
+  theme: {
+    background:  '#0f0f0f',
+    foreground:  '#e8e8e8',
+    cursor:      '#e8e8e8',
+    black:       '#1a1a1a',
+    brightBlack: '#4a4a4a',
+    red:         '#f87171',
+    brightRed:   '#fca5a5',
+    green:       '#4ade80',
+    brightGreen: '#86efac',
+    yellow:      '#facc15',
+    brightYellow:'#fde047',
+    blue:        '#60a5fa',
+    brightBlue:  '#93c5fd',
+    magenta:     '#c084fc',
+    brightMagenta:'#d8b4fe',
+    cyan:        '#22d3ee',
+    brightCyan:  '#67e8f9',
+    white:       '#e8e8e8',
+    brightWhite: '#ffffff',
+  },
+  allowProposedApi: true,
+});
+
+const fitAddon = new FitAddon.FitAddon();
+const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+
+term.loadAddon(fitAddon);
+term.loadAddon(webLinksAddon);
+
+try {
+  const webglAddon = new WebglAddon.WebglAddon();
+  webglAddon.onContextLoss(() => webglAddon.dispose());
+  term.loadAddon(webglAddon);
+} catch (e) { /* WebGL not available, fallback to canvas */ }
+
+term.open(document.getElementById('terminal'));
+fitAddon.fit();
+
+// Send input to host (C# / ConPTY)
+term.onData(data => {
+  window.chrome.webview.postMessage({ type: 'input', data: data });
+});
+
+term.onResize(({ cols, rows }) => {
+  window.chrome.webview.postMessage({ type: 'resize', cols, rows });
+});
+
+// Receive output from host
+window.chrome.webview.addEventListener('message', event => {
+  const msg = event.data;
+  if (msg.type === 'output') {
+    term.write(msg.data);
+  } else if (msg.type === 'setTheme') {
+    term.options.theme = msg.theme;
+  } else if (msg.type === 'setFont') {
+    term.options.fontFamily = msg.fontFamily;
+    term.options.fontSize   = msg.fontSize;
+    fitAddon.fit();
+  } else if (msg.type === 'clear') {
+    term.clear();
+  }
+});
+
+// Resize observer
+new ResizeObserver(() => fitAddon.fit()).observe(document.getElementById('terminal'));
+
+term.focus();
+</script>
+</body>
+</html>

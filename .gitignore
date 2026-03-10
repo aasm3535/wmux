@@ -1,0 +1,45 @@
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build outputs
+bin/
+obj/
+[Rr]elease/
+[Dd]ebug/
+x64/
+x86/
+ARM64/
+bld/
+[Bb]uild/
+_UpgradeReport_Files/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+## Windows App Packaging
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.msix
+*.msixbundle
+*.msixupload
+
+## Logs
+*.log
+*.tlog
+
+## Editor
+.idea/
+*.swp
+*~
