@@ -32,41 +32,62 @@
                           Padding="8,2,8,2">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="models:Workspace">
-                        <Button Style="{StaticResource WorkspaceTabStyle}"
-                                Click="OnWorkspaceClick" Tag="{x:Bind}">
-                            <Grid ColumnDefinitions="14,*,Auto" ColumnSpacing="8">
+                        <Grid x:Name="ItemRoot" Margin="0,1,0,1">
+                            <!-- Main tab button -->
+                            <Button Style="{StaticResource WorkspaceTabStyle}"
+                                    Click="OnWorkspaceClick" Tag="{x:Bind}">
+                                <!-- Leave room for close btn on the right -->
+                                <Grid ColumnDefinitions="14,*,28" ColumnSpacing="6">
 
-                                <!-- Color dot -->
-                                <Ellipse Grid.Column="0"
-                                         Width="7" Height="7"
-                                         VerticalAlignment="Center"
-                                         Fill="{x:Bind ColorIndex, Converter={StaticResource ColorIndexToBrushConverter}}" />
+                                    <!-- Color dot -->
+                                    <Ellipse Grid.Column="0"
+                                             Width="7" Height="7"
+                                             VerticalAlignment="Center"
+                                             Fill="{x:Bind ColorIndex, Converter={StaticResource ColorIndexToBrushConverter}}" />
 
-                                <!-- Name + meta -->
-                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
-                                    <TextBlock Text="{x:Bind Name, Mode=OneWay}"
-                                               FontSize="13"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock FontSize="11"
-                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                               TextTrimming="CharacterEllipsis"
-                                               Visibility="{x:Bind GitBranch, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
-                                        <Run Text="{x:Bind GitBranch, Mode=OneWay}" />
-                                    </TextBlock>
-                                    <TextBlock Text="{x:Bind LatestNotificationText, Mode=OneWay}"
-                                               FontSize="11"
-                                               Foreground="{ThemeResource SystemAccentColorLight1}"
-                                               TextTrimming="CharacterEllipsis"
-                                               Visibility="{x:Bind LatestNotificationText, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" />
-                                </StackPanel>
+                                    <!-- Name + meta -->
+                                    <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                                   FontSize="13"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="11"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Visibility="{x:Bind GitBranch, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}">
+                                            <Run Text="{x:Bind GitBranch, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock Text="{x:Bind LatestNotificationText, Mode=OneWay}"
+                                                   FontSize="11"
+                                                   Foreground="{ThemeResource SystemAccentColorLight1}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Visibility="{x:Bind LatestNotificationText, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" />
+                                    </StackPanel>
 
-                                <!-- Unread badge -->
-                                <InfoBadge Grid.Column="2"
-                                           Value="{x:Bind TotalUnreadCount, Mode=OneWay}"
-                                           VerticalAlignment="Center"
-                                           Visibility="{x:Bind HasUnreadNotifications, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                            </Grid>
-                        </Button>
+                                    <!-- Badge / placeholder (hidden when no unread) -->
+                                    <InfoBadge Grid.Column="2"
+                                               Value="{x:Bind TotalUnreadCount, Mode=OneWay}"
+                                               VerticalAlignment="Center"
+                                               HorizontalAlignment="Center"
+                                               Visibility="{x:Bind HasUnreadNotifications, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                </Grid>
+                            </Button>
+
+                            <!-- Close (×) button — always visible at right -->
+                            <Button HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,4,0"
+                                    Width="22" Height="22"
+                                    Padding="0"
+                                    CornerRadius="4"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Click="OnCloseWorkspace"
+                                    Tag="{x:Bind}"
+                                    ToolTipService.ToolTip="Close workspace"
+                                    Opacity="0.5">
+                                <FontIcon Glyph="&#xE711;" FontSize="10" />
+                            </Button>
+                        </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

@@ -28,6 +28,12 @@ public sealed partial class SidebarView : UserControl
             ViewModel?.SelectWorkspace(ws);
     }
 
+    private void OnCloseWorkspace(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is Workspace ws)
+            ViewModel?.CloseWorkspace(ws);
+    }
+
     private void OnNotificationsBellClick(object sender, RoutedEventArgs e)
     {
         if (ViewModel is not null)

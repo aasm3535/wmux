@@ -19,11 +19,10 @@
     background: #3a3a50;
   }
 </style>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
-<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xterm-addon-webgl@0.16.0/lib/xterm-addon-webgl.js"></script>
+<link rel="stylesheet" href="xterm.css" />
+<script src="xterm.js"></script>
+<script src="xterm-addon-fit.js"></script>
+<script src="xterm-addon-web-links.js"></script>
 </head>
 <body>
 <div id="terminal"></div>
@@ -69,11 +68,7 @@ const linksAddon = new WebLinksAddon.WebLinksAddon();
 term.loadAddon(fitAddon);
 term.loadAddon(linksAddon);
 
-try {
-  const webgl = new WebglAddon.WebglAddon();
-  webgl.onContextLoss(() => webgl.dispose());
-  term.loadAddon(webgl);
-} catch (_) {}
+// WebGL addon can be added later for GPU acceleration
 
 term.open(document.getElementById('terminal'));
 fitAddon.fit();
