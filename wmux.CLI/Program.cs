@@ -32,8 +32,8 @@ newCmd.SetHandler(async (string? cwd) =>
 
 // wmux split -h / -v
 var splitCmd = new Command("split", "Split current pane");
-var horizOpt = new Option<bool>("--horizontal", "-h", "Split horizontally");
-var vertOpt  = new Option<bool>("--vertical",   "-v", "Split vertically");
+var horizOpt = new Option<bool>(new[] { "--horizontal", "-h" }, "Split horizontally");
+var vertOpt  = new Option<bool>(new[] { "--vertical",   "-v" }, "Split vertically");
 splitCmd.AddOption(horizOpt);
 splitCmd.AddOption(vertOpt);
 splitCmd.SetHandler(async (bool h, bool v) =>

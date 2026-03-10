@@ -22,11 +22,14 @@ public sealed partial class NotificationsPanel : UserControl
         InitializeComponent();
     }
 
-    public IEnumerable<TerminalNotification> GetAllNotifications() =>
-        ViewModel?.Workspaces.SelectMany(w => w.Panels)
+    public IEnumerable<TerminalNotification> GetAllNotifications()
+    {
+        if (ViewModel is null) return Enumerable.Empty<TerminalNotification>();
+        return ViewModel.Workspaces
+            .SelectMany(w => w.Panels)
             .SelectMany(p => p.Notifications)
-            .OrderByDescending(n => n.CreatedAt)
-        ?? [];
+            .OrderByDescending(n => n.CreatedAt);
+    }
 
     private void OnClose(object sender, RoutedEventArgs e)
     {

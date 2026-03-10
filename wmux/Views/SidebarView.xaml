@@ -35,11 +35,8 @@
 
                                 <!-- Color dot -->
                                 <Ellipse Grid.Column="0" Width="8" Height="8"
-                                         VerticalAlignment="Center">
-                                    <Ellipse.Fill>
-                                        <SolidColorBrush Color="{x:Bind ColorIndex}" />
-                                    </Ellipse.Fill>
-                                </Ellipse>
+                                         VerticalAlignment="Center"
+                                         Fill="{x:Bind ColorIndex, Converter={StaticResource ColorIndexToBrushConverter}}" />
 
                                 <!-- Info -->
                                 <StackPanel Grid.Column="1" Spacing="2">

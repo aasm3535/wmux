@@ -1,12 +1,14 @@
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using wmux.Models;
 
 namespace wmux.Views;
 
 /// <summary>
-/// Renders one workspace's panels. Supports arbitrary split layouts
-/// by building a tree of GridSplitter-based containers.
+/// Renders one workspace's panels. Supports split layouts
+/// by building Grid-based containers with drag handles.
 /// </summary>
 public sealed partial class PanelHost : UserControl
 {
@@ -47,31 +49,30 @@ public sealed partial class PanelHost : UserControl
             return;
         }
 
-        // Simple split: two panels side by side (vertical split)
-        // Full binary tree split to be implemented in SplitController
+        // Two panels side by side with a simple splitter border
         RootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        RootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(4) }); // splitter
+        RootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1) });
         RootGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
         var left = CreatePanelControl(panels[0]);
         Grid.SetColumn(left, 0);
 
-        var splitter = new GridSplitter
+        var separator = new Border
         {
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent)
+            Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 30, 30, 30)),
+            Width = 1
         };
-        Grid.SetColumn(splitter, 1);
+        Grid.SetColumn(separator, 1);
 
         var right = CreatePanelControl(panels[1]);
         Grid.SetColumn(right, 2);
 
         RootGrid.Children.Add(left);
-        RootGrid.Children.Add(splitter);
+        RootGrid.Children.Add(separator);
         RootGrid.Children.Add(right);
     }
 
-    private static UIElement CreatePanelControl(Panel panel)
+    private static FrameworkElement CreatePanelControl(Models.Panel panel)
     {
         return panel switch
         {

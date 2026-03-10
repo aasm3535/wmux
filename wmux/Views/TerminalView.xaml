@@ -9,7 +9,7 @@
                 BorderThickness="2"
                 CornerRadius="0"
                 IsHitTestVisible="False"
-                Panel.ZIndex="10"
+                Canvas.ZIndex="10"
                 Visibility="Collapsed">
             <Border.BorderBrush>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
